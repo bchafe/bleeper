@@ -5,17 +5,53 @@
   //Tone.getContext().lookAhead = 0;
   let isStarted = false;
   let isSpaceDown = false;
-//osc params
+  
+  //osc params
   let frequency = 440;
   let harmonicity = 0.2;
   let modulationIndex = 3;
  
-//delay params
+  //chebyshev params
+  let chebyOn = true;
+  let order = 11;
+  let oversample = "none";
+  let chebyWet = 0.1;
+
+  //delay params
+  let delayOn = true;
   let delayTime = Tone.Time("8n").toSeconds();
   let feedback = 0.5;
-  let wet = 0.1;
+  let delayWet = 0.1;
+
+
+
+  function toggleCheby(){
+    chebyOn = !chebyOn;
+    if(chebyOn){
+      cheby.wet.value = chebyWet;
+    }
+    else{
+      cheby.wet.value = 0;
+    }
+  }
+
+  function toggleDelay(){
+    delayOn = !delayOn;
+    if(delayOn){
+      delay.wet.value = delayWet;
+    }
+    else{
+      delay.wet.value = 0;
+    }
+  }
 
   let channel = new Tone.Channel({volume: -24}).toDestination();
+  
+  let cheby = new Tone.Chebyshev({
+    order: 11,
+    oversample: "none",
+    wet: 0.1
+  });
   
   let delay = new Tone.FeedbackDelay({
     delayTime: "8n",
@@ -37,7 +73,7 @@
         modulationType: "triangle",
         harmonicity: 0.2,
         modulationIndex: 3
-  }).chain(env, delay, channel).start();
+  }).chain(env, cheby, delay, channel).start();
 
 
   function triggerAttack(){
@@ -81,13 +117,17 @@
   }
 
 $: if (isStarted){
+  //Osc params reactive
   osc.frequency.value = osc.toFrequency(frequency);
   osc.harmonicity.value = harmonicity;
   osc.modulationIndex.value = osc.toFrequency(modulationIndex);
-
+  //Delay params reactive
   delay.delayTime.value = delayTime;
   delay.feedback.value = feedback;
-  delay.wet.value = wet;
+  if(delayOn) delay.wet.value = delayWet;
+  //Cheby params reactive
+  cheby.order = order;
+  if(chebyOn) cheby.wet.value = chebyWet;
 
   
 }
@@ -109,8 +149,26 @@ $: if (isStarted){
   
   </div>
 
+  <div class="param" id="cheby-controls">
+    <h3>Chebyshev Distortion <button on:click={toggleCheby} class="toggle {chebyOn ? 'active' : ''}"></button></h3>
+    <p><label for="order">Order {order}</label>
+      <input type="range" id="order" min="0" max="24" step="1" bind:value={order}>
+    </p>
+
+    <p>
+      Oversampling: 
+      <button on:click={() => cheby.oversample = "none"}>None</button>
+      <button on:click={() => cheby.oversample = "2x"}>2x</button>
+      <button on:click={() => cheby.oversample = "4x"}>4x</button>
+    </p>
+
+    <p><label for="wet">Dry/wet: {chebyWet.toFixed(2)}</label>
+      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={chebyWet}>
+    </p>
+  </div>
+
   <div class="param" id="delay-controls">
-    <h3>Delay</h3>
+    <h3>Delay <button on:click={toggleDelay} class="toggle {delayOn ? 'active' : ''}"></button></h3>
     <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
       <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
     </p>
@@ -119,8 +177,8 @@ $: if (isStarted){
       <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
     </p>
 
-    <p><label for="wet">Dry/wet: {wet.toFixed(2)}</label>
-      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={wet}>
+    <p><label for="wet">Dry/wet: {delayWet.toFixed(2)}</label>
+      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={delayWet}>
     </p>
   </div>
 </div>
@@ -142,7 +200,20 @@ on:keyup={onKeyUp} />
   }
 
   .param p{
+    margin: 10px;
     text-align: left;
   }
   
+  .toggle{
+    background: black;
+    width: 20px;
+    height: 20px;
+    border-radius: 0%;
+    margin: 2px;
+    border: 2px solid grey;
+  }
+
+  .toggle.active{
+    background: white;
+  }
 </style>
