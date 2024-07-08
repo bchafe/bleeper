@@ -9,6 +9,11 @@
   let harmonicity = 0.2;
   let modulationIndex = 3;
  
+//delay params
+  let delayTime = Tone.Time("8n").toSeconds();
+  let feedback = 0.5;
+  let wet = 0.1;
+
   let channel = new Tone.Channel({volume: -24}).toDestination();
   
   let delay = new Tone.FeedbackDelay({
@@ -79,23 +84,42 @@ $: if (isStarted){
   osc.frequency.value = osc.toFrequency(frequency);
   osc.harmonicity.value = harmonicity;
   osc.modulationIndex.value = osc.toFrequency(modulationIndex);
+
+  delay.delayTime.value = delayTime;
+  delay.feedback.value = feedback;
+  delay.wet.value = wet;
 }
 
 </script>
 
 
 <div class="osc-controls">
-  <h3>Osc. Controls</h3>
-  <p><label for="freq">Frequency: {frequency}</label>
+  <h3>Oscillator</h3>
+  <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
     <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
   </p>
-  <p><label for="freq">Harmonicity {harmonicity}</label>
-    <input type="range" id="freq" min="0" max="8" step="0.1" bind:value={harmonicity}>
+  <p><label for="harm">Harmonicity {harmonicity.toFixed(1)}</label>
+    <input type="range" id="harm" min="0" max="8" step="0.1" bind:value={harmonicity}>
   </p>
-  <p><label for="freq">Mod. Index {modulationIndex}</label>
-    <input type="range" id="freq" min="0" max="20" step="0.1" bind:value={modulationIndex}>
+  <p><label for="modind">Mod. Index {modulationIndex.toFixed(1)}</label>
+    <input type="range" id="modind" min="0" max="20" step="0.1" bind:value={modulationIndex}>
   </p>
   <button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
+</div>
+
+<div class="delay-controls">
+  <h3>Delay</h3>
+  <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
+    <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
+  </p>
+
+  <p><label for="fb">Feedback: {feedback.toFixed(2)}</label>
+    <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
+  </p>
+
+  <p><label for="wet">Dry/wet: {wet.toFixed(2)}</label>
+    <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={wet}>
+  </p>
 </div>
 
 <svelte:window 
