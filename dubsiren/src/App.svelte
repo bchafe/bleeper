@@ -1,5 +1,6 @@
 <script>
   import * as Tone from "tone";
+  
 
   //Tone.getContext().lookAhead = 0;
   let isStarted = false;
@@ -38,7 +39,6 @@
         modulationIndex: 3
   }).chain(env, delay, channel).start();
 
-  
 
   function triggerAttack(){
     init();
@@ -88,44 +88,61 @@ $: if (isStarted){
   delay.delayTime.value = delayTime;
   delay.feedback.value = feedback;
   delay.wet.value = wet;
+
+  
 }
 
 </script>
 
+<div class="param-grid">
+  <div class="param" id="osc-controls">
+    <h3>Oscillator</h3>
+    <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
+      <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
+    </p>
+    <p><label for="harm">Harmonicity {harmonicity.toFixed(1)}</label>
+      <input type="range" id="harm" min="0" max="8" step="0.1" bind:value={harmonicity}>
+    </p>
+    <p><label for="modind">Mod. Index {modulationIndex.toFixed(1)}</label>
+      <input type="range" id="modind" min="0" max="20" step="0.1" bind:value={modulationIndex}>
+    </p>
+  
+  </div>
 
-<div class="osc-controls">
-  <h3>Oscillator</h3>
-  <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
-    <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
-  </p>
-  <p><label for="harm">Harmonicity {harmonicity.toFixed(1)}</label>
-    <input type="range" id="harm" min="0" max="8" step="0.1" bind:value={harmonicity}>
-  </p>
-  <p><label for="modind">Mod. Index {modulationIndex.toFixed(1)}</label>
-    <input type="range" id="modind" min="0" max="20" step="0.1" bind:value={modulationIndex}>
-  </p>
-  <button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
+  <div class="param" id="delay-controls">
+    <h3>Delay</h3>
+    <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
+      <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
+    </p>
+
+    <p><label for="fb">Feedback: {feedback.toFixed(2)}</label>
+      <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
+    </p>
+
+    <p><label for="wet">Dry/wet: {wet.toFixed(2)}</label>
+      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={wet}>
+    </p>
+  </div>
 </div>
-
-<div class="delay-controls">
-  <h3>Delay</h3>
-  <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
-    <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
-  </p>
-
-  <p><label for="fb">Feedback: {feedback.toFixed(2)}</label>
-    <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
-  </p>
-
-  <p><label for="wet">Dry/wet: {wet.toFixed(2)}</label>
-    <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={wet}>
-  </p>
-</div>
+<button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
 
 <svelte:window 
 on:keydown={onKeyDown} 
 on:keyup={onKeyUp} />
 
-<style>
 
+<style>
+  .param-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .param{
+    margin: 10px;
+    border: 1px solid grey;
+  }
+
+  .param p{
+    text-align: left;
+  }
+  
 </style>
