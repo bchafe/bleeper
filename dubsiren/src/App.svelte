@@ -151,7 +151,7 @@ $: if (isStarted){
 
   <div class="param" id="cheby-controls">
     <h3>Chebyshev Distortion <button on:click={toggleCheby} class="toggle {chebyOn ? 'active' : ''}"></button></h3>
-    <p><label for="order">Order {order}</label>
+    <p><label for="order">Order: {order.toString().padStart(2, "0")}</label>
       <input type="range" id="order" min="0" max="24" step="1" bind:value={order}>
     </p>
 
