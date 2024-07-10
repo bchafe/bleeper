@@ -1,6 +1,26 @@
 <script>
   import * as Tone from "tone";
   
+  
+
+  //xypad
+  import XYPad from './XYPad.svelte'
+  const height = 400;
+	const width = 400;
+	const color = '#808080'
+	const background = '#000'
+  let paramX = 0, paramY = 0, pageX = 0, pageY = 0;
+  let mouseOutsideRelease = false;
+
+  //document mouse position to hand to xy pad
+  function handleMousemove(event) {
+    pageX = event.pageX;
+    pageY = event.pageY;
+  }
+
+  function handleMouserelease(event){
+    mouseOutsideRelease = true;
+  }
 
   //Tone.getContext().lookAhead = 0;
   let isStarted = false;
@@ -129,60 +149,78 @@ $: if (isStarted){
   cheby.order = order;
   if(chebyOn) cheby.wet.value = chebyWet;
 
+  //canvas stuff
+  //console.log("X: " + paramX)
+  //console.log("Y: " + paramY)
+
+
   
 }
 
 </script>
-
-<div class="param-grid">
-  <div class="param" id="osc-controls">
-    <h3>Oscillator</h3>
-    <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
-      <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
-    </p>
-    <p><label for="harm">Harmonicity {harmonicity.toFixed(1)}</label>
-      <input type="range" id="harm" min="0" max="8" step="0.1" bind:value={harmonicity}>
-    </p>
-    <p><label for="modind">Mod. Index {modulationIndex.toFixed(1)}</label>
-      <input type="range" id="modind" min="0" max="20" step="0.1" bind:value={modulationIndex}>
-    </p>
+<main>
   
+
+  <XYPad
+            {height}
+            {width}
+            {color} 
+            {background}
+            bind:paramX
+            bind:paramY
+  />
+  <p>X: {paramX.toFixed(2)}, Y: {paramY.toFixed(2)}</p>
+
+  <div class="param-grid">
+    <div class="param" id="osc-controls">
+      <h3>Oscillator</h3>
+      <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
+        <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
+      </p>
+      <p><label for="harm">Harmonicity {harmonicity.toFixed(1)}</label>
+        <input type="range" id="harm" min="0" max="8" step="0.1" bind:value={harmonicity}>
+      </p>
+      <p><label for="modind">Mod. Index {modulationIndex.toFixed(1)}</label>
+        <input type="range" id="modind" min="0" max="20" step="0.1" bind:value={modulationIndex}>
+      </p>
+    
+    </div>
+
+    <div class="param" id="cheby-controls">
+      <h3>Chebyshev Distortion <button on:click={toggleCheby} class="toggle {chebyOn ? 'active' : ''}"></button></h3>
+      <p><label for="order">Order: {order.toString().padStart(2, "0")}</label>
+        <input type="range" id="order" min="0" max="24" step="1" bind:value={order}>
+      </p>
+
+      <p>
+        Oversampling: 
+        <button on:click={() => cheby.oversample = "none"}>None</button>
+        <button on:click={() => cheby.oversample = "2x"}>2x</button>
+        <button on:click={() => cheby.oversample = "4x"}>4x</button>
+      </p>
+
+      <p><label for="wet">Dry/wet: {chebyWet.toFixed(2)}</label>
+        <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={chebyWet}>
+      </p>
+    </div>
+
+    <div class="param" id="delay-controls">
+      <h3>Delay <button on:click={toggleDelay} class="toggle {delayOn ? 'active' : ''}"></button></h3>
+      <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
+        <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
+      </p>
+
+      <p><label for="fb">Feedback: {feedback.toFixed(2)}</label>
+        <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
+      </p>
+
+      <p><label for="wet">Dry/wet: {delayWet.toFixed(2)}</label>
+        <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={delayWet}>
+      </p>
+    </div>
   </div>
-
-  <div class="param" id="cheby-controls">
-    <h3>Chebyshev Distortion <button on:click={toggleCheby} class="toggle {chebyOn ? 'active' : ''}"></button></h3>
-    <p><label for="order">Order: {order.toString().padStart(2, "0")}</label>
-      <input type="range" id="order" min="0" max="24" step="1" bind:value={order}>
-    </p>
-
-    <p>
-      Oversampling: 
-      <button on:click={() => cheby.oversample = "none"}>None</button>
-      <button on:click={() => cheby.oversample = "2x"}>2x</button>
-      <button on:click={() => cheby.oversample = "4x"}>4x</button>
-    </p>
-
-    <p><label for="wet">Dry/wet: {chebyWet.toFixed(2)}</label>
-      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={chebyWet}>
-    </p>
-  </div>
-
-  <div class="param" id="delay-controls">
-    <h3>Delay <button on:click={toggleDelay} class="toggle {delayOn ? 'active' : ''}"></button></h3>
-    <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
-      <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
-    </p>
-
-    <p><label for="fb">Feedback: {feedback.toFixed(2)}</label>
-      <input type="range" id="fb" min="0" max="1" step="0.01" bind:value={feedback}>
-    </p>
-
-    <p><label for="wet">Dry/wet: {delayWet.toFixed(2)}</label>
-      <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={delayWet}>
-    </p>
-  </div>
-</div>
-<button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
+  <button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
+</main>
 
 <svelte:window 
 on:keydown={onKeyDown} 
@@ -206,14 +244,23 @@ on:keyup={onKeyUp} />
   
   .toggle{
     background: black;
-    width: 20px;
-    height: 20px;
+    width: 10px;
+    height: 10px;
     border-radius: 0%;
     margin: 2px;
     border: 2px solid grey;
+    
   }
 
   .toggle.active{
     background: white;
   }
+
+  canvas{
+    background-color: white;
+    cursor: pointer;
+  }
+
+
+
 </style>
