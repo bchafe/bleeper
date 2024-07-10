@@ -10,7 +10,7 @@
     export let paramX = 0;
     export let paramY = 0;
 
-    export let border = 10;
+	export let border = 10;
 
 	let pageX = 0;
     let pageY = 0;
@@ -32,10 +32,12 @@
 
 	
 
+
+
 	onMount(() => {
-		context = canvas.getContext('2d')
-		context.lineWidth = 3
-		context.strokeStyle = color
+		context = canvas.getContext('2d');
+		context.lineWidth = 2;
+		context.strokeStyle = color;
 	})
 	
 	
@@ -45,16 +47,18 @@
 	}
 	
 	const handleStart = ((e) => { 
-		isInteracting = true
+		isInteracting = true;
 		
 		handleSize(e);
 
 		if (e.stopPropagation) e.stopPropagation();
 		if (e.preventDefault) e.preventDefault();
 		
+		//activate mouseEventShield
 		if (e.type === "mousedown") document.body.append(mouseEventShield);
 
-		const { top, left } = canvas.getBoundingClientRect(); //get origin of canvas
+		//get origin of canvas
+		const { top, left } = canvas.getBoundingClientRect(); 
 		originY = top;
 		originX = left;
 
@@ -73,12 +77,16 @@
 		paramY = y / height;
 		paramY = 1-paramY; //flip Y value so coords are akin to (X>0,Y>0) on a cartesian plane.
 
+	
+
+		//clear canvas
+		context.clearRect(0, 0, width, height);
+
 		//draw circle
-		context.clearRect(0, 0, width, height)
 		context.beginPath();
 		context.arc(x, y, border, 0, 2 * Math.PI);
-		context.closePath()
-		context.stroke()            
+		context.closePath();
+		context.stroke();         
 	})
 	
 	
