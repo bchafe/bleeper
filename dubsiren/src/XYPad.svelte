@@ -12,8 +12,8 @@
 
 	export let border = 10;
 
-	let pageX = 0;
-    let pageY = 0;
+	let clientX = 0;
+    let clientY = 0;
 
 	let canvas
 	let context
@@ -30,9 +30,6 @@
     	e.stopPropagation();
  	});
 
-	
-
-
 
 	onMount(() => {
 		context = canvas.getContext('2d');
@@ -42,10 +39,11 @@
 	
 	
 	const handleSize = (e) => {
-		pageX = e.pageX;
-		pageY = e.pageY;
+		clientX = e.clientX;
+		clientY = e.clientY;
 	}
 	
+
 	const handleStart = ((e) => { 
 		isInteracting = true;
 		
@@ -63,8 +61,8 @@
 		originX = left;
 
 		//calculate relative position from page position
-		let x = pageX - originX;
-		let y = pageY - originY;
+		let x = clientX - originX;
+		let y = clientY - originY;
 
 		//xy value processing and output
 		if(x < border) x = 0;
@@ -77,8 +75,6 @@
 		paramY = y / height;
 		paramY = 1-paramY; //flip Y value so coords are akin to (X>0,Y>0) on a cartesian plane.
 
-	
-
 		//clear canvas
 		context.clearRect(0, 0, width, height);
 
@@ -86,7 +82,13 @@
 		context.beginPath();
 		context.arc(x, y, border, 0, 2 * Math.PI);
 		context.closePath();
-		context.stroke();         
+		context.stroke();     
+		
+		//test
+		console.log("clientX: " + clientX);
+		console.log("clientY: " + clientY);
+		console.log("OriginX: " + originX);
+		console.log("OriginY: " + originY);
 	})
 	
 	
