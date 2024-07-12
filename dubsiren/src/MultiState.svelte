@@ -7,17 +7,15 @@
         let length = key.length;
         let currentKey = key[0];
         export let currentValue = value[0];
+        export let defaultIndex = 0;
         let currentIndex = 0;
         let padding = 0;
     
     
         
         onMount(() => {
-            for(let i = 0; i < key.length; i++){
-                padding = (key[i].length > padding) ? key[i].length : padding;
-            }
+            currentIndex = defaultIndex;
             handleChange();
-
         })
     
         let handleChange = () => {
@@ -54,6 +52,8 @@
         }
 
         button{
+            height: 40px;
+            line-height: 0;
             border-radius: 0;
             background-color: black;
         }

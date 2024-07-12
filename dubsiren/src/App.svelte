@@ -1,15 +1,18 @@
 <script>
   import * as Tone from "tone";
   
-  
-
   //xypad
   import XYPad from './XYPad.svelte'
+  import MultiState from './MultiState.svelte'
   const height = 400;
 	const width = 400;
 	const color = '#fff'
 	const background = '#000'
   let paramX = 0, paramY = 0, pageX = 0, pageY = 0;
+
+  //ui
+  const waveshapes = ["sine", "triangle", "sawtooth", "square"];
+  const oversampling = ["none", "2x", "4x"];
 
   //Tone.getContext().lookAhead = 0;
   let isStarted = false;
@@ -19,11 +22,13 @@
   let frequency = 440;
   let harmonicity = 0.2;
   let modulationIndex = 3;
+  let carrierWave = "square";
+  let modWave = "triangle";
  
   //chebyshev params
   let chebyOn = true;
   let order = 11;
-  let oversample = "none";
+  let chebyOversample = "none";
   let chebyWet = 0.1;
 
   //delay params
@@ -37,15 +42,15 @@
   let channel = new Tone.Channel({volume: -24}).toDestination();
   
   let cheby = new Tone.Chebyshev({
-    order: 11,
-    oversample: "none",
-    wet: 0.1
+    order: order,
+    oversample: chebyOversample,
+    wet: chebyWet
   });
   
   let delay = new Tone.FeedbackDelay({
-    delayTime: "8n",
-    feedback: 0.5,
-    wet: 0.1
+    delayTime: delayTime,
+    feedback: feedback,
+    wet: delayWet
   });
 
   let env = new Tone.AmplitudeEnvelope({
@@ -57,11 +62,11 @@
   
 
   let osc = new Tone.FMOscillator({
-        frequency: 200,
-        type: "square",
-        modulationType: "triangle",
-        harmonicity: 0.2,
-        modulationIndex: 3
+        frequency: frequency,
+        type: carrierWave,
+        modulationType: modWave,
+        harmonicity: harmonicity,
+        modulationIndex: modulationIndex
   }).chain(env, cheby, delay, channel).start();
 
 
@@ -98,11 +103,11 @@
   }
 
   function onKeyDown(event){
-    if (event.repeat) return;
     switch(event.key){
       case " ":
-        isSpaceDown = true;
         event.preventDefault();
+        if (event.repeat) return;
+        isSpaceDown = true;
         triggerAttack();
         break;
     }
@@ -111,8 +116,8 @@
   function onKeyUp(event){
     switch(event.key){
       case " ":
-        isSpaceDown = false;
         event.preventDefault();
+        isSpaceDown = false;
         triggerRelease();
         break;
     }
@@ -129,17 +134,20 @@
 
   //reactive
   $: if (isStarted){
-    //Osc params reactive
-    osc.frequency.value = osc.toFrequency(frequency);
-    osc.harmonicity.value = harmonicity;
-    osc.modulationIndex.value = osc.toFrequency(modulationIndex);
-    //Delay params reactive
-    delay.delayTime.value = delayTime;
-    delay.feedback.value = feedback;
-    if(delayOn) delay.wet.value = delayWet;
-    //Cheby params reactive
-    cheby.order = order;
-    if(chebyOn) cheby.wet.value = chebyWet;
+      //Osc params reactive
+      osc.frequency.value = osc.toFrequency(frequency);
+      osc.harmonicity.value = harmonicity;
+      osc.modulationIndex.value = osc.toFrequency(modulationIndex);
+      osc.type = carrierWave; 
+      osc.modulationType = modWave;
+      //Delay params reactive
+      delay.delayTime.value = delayTime;
+      delay.feedback.value = feedback;
+      if(delayOn) delay.wet.value = delayWet;
+      //Cheby params reactive
+      cheby.order = order;
+      if(chebyOn) cheby.wet.value = chebyWet;
+      cheby.oversample = chebyOversample;
   }
 
   $: {
@@ -148,9 +156,6 @@
       osc.harmonicity.value = paramY * 8;
   }
 
-  $: if(!document.hasFocus()){
-    onKeyUp(new KeyboardEvent('keyup', {'key': ' '}));
-  }
 
 </script>
 
@@ -158,7 +163,7 @@
   <svelte:window 
 on:keydown={onKeyDown} 
 on:keyup={onKeyUp}
-on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
+on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))} 
 />
 
 <XYPad
@@ -174,6 +179,14 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 <div class="param-grid">
   <div class="param" id="osc-controls">
     <h3>Oscillator</h3>
+    <p>Carrier Wave:
+      <MultiState --width="250px" key={["sine", "triangle", "sawtooth", "square"]} value={["sine", "triangle", "sawtooth", "square"]} bind:currentValue={carrierWave} defaultIndex={3}></MultiState>
+    </p>
+
+    <p>Modulator Wave:
+      <MultiState --width="250px" key={["sine", "triangle", "sawtooth", "square"]} value={["sine", "triangle", "sawtooth", "square"]} bind:currentValue={modWave} defaultIndex={1}></MultiState>
+    </p>
+    
     <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
       <input type="range" id="freq" min="20" max="5000" step="1" bind:value={frequency}>
     </p>
@@ -187,16 +200,14 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
   </div>
 
   <div class="param" id="cheby-controls">
-    <h3>Chebyshev Distortion <button on:click={toggleCheby} class="toggle {chebyOn ? 'active' : ''}"></button></h3>
+    <h3><input type="checkbox" on:click={toggleCheby} checked={true}>Chebyshev Distortion</h3>
     <p><label for="order">Order: {order.toString().padStart(2, "0")}</label>
       <input type="range" id="order" min="0" max="24" step="1" bind:value={order}>
     </p>
 
     <p>
       Oversampling: 
-      <button on:click={() => cheby.oversample = "none"}>None</button>
-      <button on:click={() => cheby.oversample = "2x"}>2x</button>
-      <button on:click={() => cheby.oversample = "4x"}>4x</button>
+      <MultiState --width="250px" key={["none", "2x", "4x"]} value={["none", "2x", "4x"]} bind:currentValue={chebyOversample}></MultiState>
     </p>
 
     <p><label for="wet">Dry/wet: {chebyWet.toFixed(2)}</label>
@@ -205,7 +216,7 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
   </div>
 
   <div class="param" id="delay-controls">
-    <h3>Delay <button on:click={toggleDelay} class="toggle {delayOn ? 'active' : ''}"></button></h3>
+    <h3><input type="checkbox" on:click={toggleDelay} checked={true}>Delay</h3>
     <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
       <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
     </p>
@@ -239,26 +250,61 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
     margin: 10px;
     text-align: left;
   }
-  
-  .toggle{
-    background: black;
-    width: 10px;
-    height: 10px;
-    border-radius: 0%;
-    margin: 2px;
-    border: 2px solid grey;
-    
-  }
-
-  .toggle.active{
-    background: white;
-  }
 
   canvas{
     background-color: white;
     cursor: pointer;
   }
 
+  button{
+    border-radius: 0;
+    background-color: black;
+  }
+
+  button.active{
+    background-color: grey;
+  }
+
+  button:focus{
+    outline: none;
+  }
+
+  button:hover{
+    border-color: white;
+  }
 
 
+  input[type="checkbox"]{
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #000;
+    margin-right: 10px;
+    font: inherit;
+    color: grey;
+    width: 1em;
+    height: 1em;
+    border: 2px solid grey;
+    border-radius: 50%;
+    transform: translateY(.3em);
+    transition: border-color 0.1s;
+  }
+
+  input[type="checkbox"]:focus{
+    outline: none;
+  }
+
+
+
+  input[type="checkbox"]:checked{
+    background-color: white;
+    border-color: black;
+  }
+
+  input[type="checkbox"]:hover{
+    border-color: white;
+  }
+
+  input[type="range"]{
+    width: 300px;
+  }
 </style>
