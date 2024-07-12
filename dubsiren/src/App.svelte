@@ -132,23 +132,22 @@
   }
 
 
-  //reactive
-  $: if (isStarted){
-      //Osc params reactive
-      osc.frequency.value = osc.toFrequency(frequency);
-      osc.harmonicity.value = harmonicity;
-      osc.modulationIndex.value = osc.toFrequency(modulationIndex);
-      osc.type = carrierWave; 
-      osc.modulationType = modWave;
-      //Delay params reactive
-      delay.delayTime.value = delayTime;
-      delay.feedback.value = feedback;
-      if(delayOn) delay.wet.value = delayWet;
-      //Cheby params reactive
-      cheby.order = order;
-      if(chebyOn) cheby.wet.value = chebyWet;
-      cheby.oversample = chebyOversample;
-  }
+  //reactive statements
+
+  //Osc params reactive
+  $: if (isStarted) osc.frequency.value = osc.toFrequency(frequency);
+  $: if (isStarted) osc.harmonicity.value = harmonicity;
+  $: if (isStarted) osc.modulationIndex.value = osc.toFrequency(modulationIndex);
+  $: if (isStarted) osc.type = carrierWave; 
+  $: if (isStarted) osc.modulationType = modWave;
+  //Delay params reactive
+  $: if (isStarted) delay.delayTime.value = delayTime;
+  $: if (isStarted) delay.feedback.value = feedback;
+  $: if (isStarted) if(delayOn) delay.wet.value = delayWet;
+  //Chebyshev params reactive
+  $: if (isStarted) cheby.order = order;
+  $: if (isStarted) if(chebyOn) cheby.wet.value = chebyWet;
+  $: if (isStarted) cheby.oversample = chebyOversample;
 
   $: {
       //xypad test
