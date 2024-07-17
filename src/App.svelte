@@ -69,6 +69,8 @@
         modulationIndex: modulationIndex
   }).chain(env, cheby, delay, channel).start();
 
+  let lfo = new Tone.LFO()
+
 
   //functions
   function toggleCheby(){
@@ -177,7 +179,7 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 
 <div class="param-grid">
   <div class="param" id="osc-controls">
-    <h3>Oscillator</h3>
+    <h3>FM Oscillator</h3>
     <p>Carrier Wave:
       <MultiState --width="250px" key={["sine", "triangle", "sawtooth", "square"]} value={["sine", "triangle", "sawtooth", "square"]} bind:currentValue={carrierWave} defaultIndex={3}></MultiState>
     </p>
@@ -216,7 +218,7 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 
   <div class="param" id="delay-controls">
     <h3><input type="checkbox" on:click={toggleDelay} checked={true}>Delay</h3>
-    <p><label for="dtime">Time: {delayTime.toFixed(2)}</label>
+    <p><label for="dtime">Time: {(delayTime*1000).toString().padStart(4, "0") + " ms"}</label>
       <input type="range" id="dtime" min="0" max="1" step="0.01" bind:value={delayTime}>
     </p>
 
