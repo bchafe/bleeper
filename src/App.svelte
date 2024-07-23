@@ -1,7 +1,7 @@
 <script>
   import * as Tone from "tone";
   
-  //xypad
+  //dropdown
   import XYPad from './XYPad.svelte'
   import MultiState from './MultiState.svelte'
   const height = 400;
@@ -10,9 +10,7 @@
 	const background = '#000'
   let paramX = 0, paramY = 0, pageX = 0, pageY = 0;
 
-  //ui
-  const waveshapes = ["sine", "triangle", "sawtooth", "square"];
-  const oversampling = ["none", "2x", "4x"];
+ 
 
   //Tone.getContext().lookAhead = 0;
   let isStarted = false;
@@ -37,10 +35,21 @@
   let feedback = 0.5;
   let delayWet = 0.1;
 
+  //lfo params
+  let lfoOn = true;
+  let lfoWave = "sine";
+  let lfoFrequency = 10;
+  let lfoMin = 0;
+  let lfoMax = 5000;
+
 
   //tone.js node declarations
   let channel = new Tone.Channel({volume: -24}).toDestination();
+  //let meter = new Tone.Meter();
+  //channel.connect(meter);
   
+  let limiter = new Tone.Limiter(-8);
+
   let cheby = new Tone.Chebyshev({
     order: order,
     oversample: chebyOversample,
@@ -52,7 +61,7 @@
     feedback: feedback,
     wet: delayWet
   });
-
+ 
   let env = new Tone.AmplitudeEnvelope({
     attack: 0.001,
     decay: 0,
@@ -67,9 +76,113 @@
         modulationType: modWave,
         harmonicity: harmonicity,
         modulationIndex: modulationIndex
-  }).chain(env, cheby, delay, channel).start();
+  }).chain(env, cheby, delay, limiter, channel).start();
 
-  let lfo = new Tone.LFO()
+  let lfo = new Tone.LFO({
+    frequency: lfoFrequency,
+    type: lfoWave,
+    min: lfoMin,
+    max: lfoMax
+  });
+
+  let lfoPipe = new Tone.Gain();
+  lfo.connect(lfoPipe);
+
+
+  //xypad, lfo dropdown vars and functions
+  let dropdownXindex = 0;
+  let dropdownYindex = 0;
+  let dropdownLFOindex = 0;
+  let dropdownLFOindexLast = 0;
+  let dropdownOptions = [
+    {
+      name: "None",
+      max: 0,
+      set value(val){
+        
+      },
+      get lfoValue(){
+        return null;
+      }
+    },
+    {
+      name: "OSC Frequency",
+      max: 5000,
+      set value(val){
+        osc.frequency.value = val;
+      },
+      get lfoValue(){
+        return osc.frequency;
+      }
+    },
+    {
+      name: "OSC Harmonicity",
+      max: 8,
+      set value(val){
+        osc.harmonicity.value = val;
+      },
+      get lfoValue(){
+        return osc.harmonicity;
+      }
+    }
+  ];
+
+  dropdownOptions.forEach( (option, i) => {
+    //assign defaults for isSelected props (excluding option "None")
+    if(i > 0){
+      option['isSelectedX'] = false;
+      option['isSelectedY'] = false;
+      option['isSelectedLFO'] = false;
+    }
+  });
+
+  function dropdownXindexChange(){
+    var index = dropdownXindex;
+    for(var i = 0; i < dropdownOptions.length; i++){
+      //set selected to true for current selected option, false for the rest.
+      dropdownOptions[i].isSelectedX = (i === index) ? true : false;
+    }
+    //assign value from interface to internal param (not reactive)
+    dropdownOptions[dropdownXindex].value = paramX * dropdownOptions[dropdownXindex].max;
+  }
+
+  function dropdownYindexChange(){
+    var index = dropdownYindex;
+    for(var i = 0; i < dropdownOptions.length; i++){
+      //set selected to true for current selected option, false for the rest.
+      dropdownOptions[i].isSelectedY = (i === index) ? true : false;
+    }
+    //assign value from interface to internal param (not reactive)
+    dropdownOptions[dropdownYindex].value = paramY * dropdownOptions[dropdownYindex].max;
+  }
+
+  function dropdownLFOindexChange(){
+    var index = dropdownLFOindex;
+    var last = dropdownLFOindexLast;
+
+    //if last selection was not "None"
+    if(last !== 0){
+      //disconnect lfo from previous parameter
+      lfoPipe.disconnect();
+    }
+    else{
+      lfo.start();
+    }
+
+    for(var i = 0; i < dropdownOptions.length; i++){
+      //set selected to true for current selected option, false for the rest.
+      dropdownOptions[i].isSelectedLFO = (i === index) ? true : false;
+    }
+    
+    //if current selection is not "None"
+    if(index !== 0){
+      //connect lfo to value
+      lfoPipe.connect(dropdownOptions[index].lfoValue)
+    }
+    else{
+      lfo.stop();
+    }
+  }
 
 
   //functions
@@ -93,6 +206,16 @@
     }
   }
 
+  function toggleLFO(){
+    lfoOn = !lfoOn;
+    if(lfoOn){
+      lfo.start();
+    }
+    else{
+      lfo.stop();
+    }
+  }
+
   function triggerAttack(){
     init();
     console.log("Trigger attack");
@@ -102,6 +225,7 @@
   function triggerRelease(){
     console.log("Trigger release");
     env.triggerRelease(Tone.context.currentTime);
+    //console.log(meter.getValue());
   }
 
   function onKeyDown(event){
@@ -151,12 +275,30 @@
   $: if (isStarted) if(chebyOn) cheby.wet.value = chebyWet;
   $: if (isStarted) cheby.oversample = chebyOversample;
 
-  $: {
-      //xypad test
-      osc.frequency.value = paramX * 5000;
-      osc.harmonicity.value = paramY * 8;
+  //xypad reactive
+  $: {      
+      dropdownOptions[dropdownXindex].value = paramX * dropdownOptions[dropdownXindex].max;
+      dropdownOptions[dropdownYindex].value = paramY * dropdownOptions[dropdownYindex].max;
   }
 
+
+  
+  function oscdebug(){
+    var cache = [];
+    let out = JSON.stringify(osc, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        // Duplicate reference found, discard key
+        if (cache.includes(value)) return;
+
+        // Store value in our collection
+        cache.push(value);
+      }
+      return value;
+    });
+    cache = null; // Enable garbage collection
+    console.log(out);
+
+  }
 
 </script>
 
@@ -164,10 +306,39 @@
   <svelte:window 
 on:keydown={onKeyDown} 
 on:keyup={onKeyUp}
-on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))} 
+on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
+on:contextmenu={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 />
 
-<XYPad
+<div class="xy-container">
+  <div class="xy-dropdown-container">
+    X:
+    <select id="xdropdown" bind:value={dropdownXindex} on:change={dropdownXindexChange}>
+      {#each dropdownOptions as option, i}
+        <option value={i} disabled={option.isSelectedY || option.isSelectedLFO}>
+          {option.name}
+        </option>
+      {/each}
+    </select>
+
+    Y:
+    <select id="ydropdown" bind:value={dropdownYindex} on:change={dropdownYindexChange}>
+      {#each dropdownOptions as option, i}
+        <option value={i} disabled={option.isSelectedX || option.isSelectedLFO}>
+          {option.name}
+        </option>
+      {/each}
+    </select>
+  </div>
+
+
+<button on:click={() => {osc.frequency.overridden = false;}}>Overridden false</button>
+<button on:click={() => {osc.frequency.overridden = true;}}>Overridden true</button>
+<button on:click={oscdebug}>Log</button>
+<button on:click={() => {console.log(console.log(og === osc))}}>Diff</button>
+<button on:click={() => {osc.frequency.value=440}}>Reset Freq</button>
+
+  <XYPad
           {height}
           {width}
           {color} 
@@ -176,6 +347,7 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
           bind:paramY
 />
 <p>X: {paramX.toFixed(2)}, Y: {paramY.toFixed(2)}</p>
+</div>
 
 <div class="param-grid">
   <div class="param" id="osc-controls">
@@ -230,14 +402,38 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
       <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={delayWet}>
     </p>
   </div>
+  <div class="param" id="lfo-controls">
+    <h3><input type="checkbox" on:click={toggleLFO} checked={true}>LFO</h3>
+    <p>Parameter:     
+      <select id="ydropdown" bind:value={dropdownLFOindex} on:change={dropdownLFOindexChange}>
+        {#each dropdownOptions as option, i}
+          <option value={i} disabled={option.isSelectedX || option.isSelectedY}>
+            {option.name}
+          </option>
+        {/each}
+      </select>
+    </p>
+    <p><label for="lfo-frequency">Frequency {lfoFrequency.toFixed(2)}</label>
+      <input type="range" id="lfo-frequency" min="0" max="100" step="0.01" bind:value={lfoFrequency}>
+    </p>
+    <p><label for="lfo-min"> {lfoMin.toFixed(2)}</label>
+      <input type="range" id="lfo-min" min="0" max="100" step="0.01" bind:value={lfoMin}>
+    </p>
+  </div>
 </div>
-<button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>
+
+
+<!--<button on:mousedown={() => triggerAttack()} on:mouseup={() => triggerRelease()} >fire</button>-->
 
 
 
 
 
 <style>
+  .xy-dropdown-container{
+    margin: 10px;
+  }
+  
   .param-grid{
     display: grid;
     grid-template-columns: repeat(2, 1fr);
