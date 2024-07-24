@@ -48,14 +48,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background-color: black;
+            border: 1px solid;
+            border-color: grey;
         }
 
         button{
             height: 40px;
             line-height: 0;
-            border-radius: 0;
-            background-color: black;
+            border-radius: 0%;
+            background-color: #242424;
         }
         button:focus{
             outline: none;

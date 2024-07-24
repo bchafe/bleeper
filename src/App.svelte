@@ -79,9 +79,8 @@
   }).chain(env, cheby, delay, limiter, channel).start();
 
   //xypad, lfo dropdown vars and functions
-  let dropdownXindex = 0;
-  let dropdownYindex = 0;
-  let dropdownLFOindex = 0;
+  let dropdownXindex = 1;
+  let dropdownYindex = 2;
   let dropdownOptions = [
     {
       name: "None",
@@ -89,9 +88,6 @@
       set value(val){
         
       },
-      get lfoValue(){
-        return null;
-      }
     },
     {
       name: "OSC Frequency",
@@ -99,9 +95,6 @@
       set value(val){
         osc.frequency.value = val;
       },
-      get lfoValue(){
-        return osc.frequency;
-      }
     },
     {
       name: "OSC Harmonicity",
@@ -109,9 +102,6 @@
       set value(val){
         osc.harmonicity.value = val;
       },
-      get lfoValue(){
-        return osc.harmonicity;
-      }
     }
   ];
 
