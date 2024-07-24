@@ -7,7 +7,7 @@
   const height = 400;
 	const width = 400;
 	const color = '#fff'
-	const background = '#000'
+	const background = '#202020'
   let paramX = 0, paramY = 0, pageX = 0, pageY = 0;
 
  
@@ -90,17 +90,59 @@
       },
     },
     {
-      name: "OSC Frequency",
+      name: "Osc. Frequency",
       max: 5000,
       set value(val){
         osc.frequency.value = val;
       },
     },
     {
-      name: "OSC Harmonicity",
+      name: "Osc. Harmonicity",
       max: 8,
       set value(val){
         osc.harmonicity.value = val;
+      },
+    },
+    {
+      name: "Osc. Mod. Index",
+      max: 20,
+      set value(val){
+        osc.modulationIndex.value = val;
+      },
+    },
+    {
+      name: "Cheby. Order",
+      max: 24,
+      set value(val){
+        cheby.order = Math.round(val);
+      },
+    },
+    {
+      name: "Cheby. Dry/wet",
+      max: 1,
+      set value(val){
+        cheby.wet.value = val;
+      },
+    },
+    {
+      name: "Delay Time",
+      max: 1,
+      set value(val){
+        delay.delayTime.value = val;
+      },
+    },
+    {
+      name: "Delay Feedback",
+      max: 1,
+      set value(val){
+        delay.feedback.value = val;
+      },
+    },
+    {
+      name: "Delay Dry/wet",
+      max: 1,
+      set value(val){
+        delay.wet.value = val;
       },
     }
   ];
@@ -116,7 +158,8 @@
 
   function dropdownXindexChange(){
     var index = dropdownXindex;
-    for(var i = 0; i < dropdownOptions.length; i++){
+    //loop starts at 1 to exclude "None"
+    for(var i = 1; i < dropdownOptions.length; i++){
       //set selected to true for current selected option, false for the rest.
       dropdownOptions[i].isSelectedX = (i === index) ? true : false;
     }
@@ -126,7 +169,8 @@
 
   function dropdownYindexChange(){
     var index = dropdownYindex;
-    for(var i = 0; i < dropdownOptions.length; i++){
+    //loop starts at 1 to exclude "None"
+    for(var i = 1; i < dropdownOptions.length; i++){
       //set selected to true for current selected option, false for the rest.
       dropdownOptions[i].isSelectedY = (i === index) ? true : false;
     }
