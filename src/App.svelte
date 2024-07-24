@@ -78,22 +78,10 @@
         modulationIndex: modulationIndex
   }).chain(env, cheby, delay, limiter, channel).start();
 
-  let lfo = new Tone.LFO({
-    frequency: lfoFrequency,
-    type: lfoWave,
-    min: lfoMin,
-    max: lfoMax
-  });
-
-  let lfoPipe = new Tone.Gain();
-  lfo.connect(lfoPipe);
-
-
   //xypad, lfo dropdown vars and functions
   let dropdownXindex = 0;
   let dropdownYindex = 0;
   let dropdownLFOindex = 0;
-  let dropdownLFOindexLast = 0;
   let dropdownOptions = [
     {
       name: "None",
@@ -156,35 +144,6 @@
     dropdownOptions[dropdownYindex].value = paramY * dropdownOptions[dropdownYindex].max;
   }
 
-  function dropdownLFOindexChange(){
-    var index = dropdownLFOindex;
-    var last = dropdownLFOindexLast;
-
-    //if last selection was not "None"
-    if(last !== 0){
-      //disconnect lfo from previous parameter
-      lfoPipe.disconnect();
-    }
-    else{
-      lfo.start();
-    }
-
-    for(var i = 0; i < dropdownOptions.length; i++){
-      //set selected to true for current selected option, false for the rest.
-      dropdownOptions[i].isSelectedLFO = (i === index) ? true : false;
-    }
-    
-    //if current selection is not "None"
-    if(index !== 0){
-      //connect lfo to value
-      lfoPipe.connect(dropdownOptions[index].lfoValue)
-    }
-    else{
-      lfo.stop();
-    }
-  }
-
-
   //functions
   function toggleCheby(){
     chebyOn = !chebyOn;
@@ -203,16 +162,6 @@
     }
     else{
       delay.wet.value = 0;
-    }
-  }
-
-  function toggleLFO(){
-    lfoOn = !lfoOn;
-    if(lfoOn){
-      lfo.start();
-    }
-    else{
-      lfo.stop();
     }
   }
 
@@ -310,44 +259,7 @@ on:blur={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 on:contextmenu={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 />
 
-<div class="xy-container">
-  <div class="xy-dropdown-container">
-    X:
-    <select id="xdropdown" bind:value={dropdownXindex} on:change={dropdownXindexChange}>
-      {#each dropdownOptions as option, i}
-        <option value={i} disabled={option.isSelectedY || option.isSelectedLFO}>
-          {option.name}
-        </option>
-      {/each}
-    </select>
 
-    Y:
-    <select id="ydropdown" bind:value={dropdownYindex} on:change={dropdownYindexChange}>
-      {#each dropdownOptions as option, i}
-        <option value={i} disabled={option.isSelectedX || option.isSelectedLFO}>
-          {option.name}
-        </option>
-      {/each}
-    </select>
-  </div>
-
-
-<button on:click={() => {osc.frequency.overridden = false;}}>Overridden false</button>
-<button on:click={() => {osc.frequency.overridden = true;}}>Overridden true</button>
-<button on:click={oscdebug}>Log</button>
-<button on:click={() => {console.log(console.log(og === osc))}}>Diff</button>
-<button on:click={() => {osc.frequency.value=440}}>Reset Freq</button>
-
-  <XYPad
-          {height}
-          {width}
-          {color} 
-          {background}
-          bind:paramX
-          bind:paramY
-/>
-<p>X: {paramX.toFixed(2)}, Y: {paramY.toFixed(2)}</p>
-</div>
 
 <div class="param-grid">
   <div class="param" id="osc-controls">
@@ -402,23 +314,36 @@ on:contextmenu={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
       <input type="range" id="wet" min="0" max="1" step="0.01" bind:value={delayWet}>
     </p>
   </div>
-  <div class="param" id="lfo-controls">
-    <h3><input type="checkbox" on:click={toggleLFO} checked={true}>LFO</h3>
-    <p>Parameter:     
-      <select id="ydropdown" bind:value={dropdownLFOindex} on:change={dropdownLFOindexChange}>
+  <div class="param" id="xy-container">
+    <div class="xy-dropdown-container">
+      X:
+      <select id="xdropdown" bind:value={dropdownXindex} on:change={dropdownXindexChange} on:click={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}>
         {#each dropdownOptions as option, i}
-          <option value={i} disabled={option.isSelectedX || option.isSelectedY}>
+          <option value={i} disabled={option.isSelectedY || option.isSelectedLFO}>
             {option.name}
           </option>
         {/each}
       </select>
-    </p>
-    <p><label for="lfo-frequency">Frequency {lfoFrequency.toFixed(2)}</label>
-      <input type="range" id="lfo-frequency" min="0" max="100" step="0.01" bind:value={lfoFrequency}>
-    </p>
-    <p><label for="lfo-min"> {lfoMin.toFixed(2)}</label>
-      <input type="range" id="lfo-min" min="0" max="100" step="0.01" bind:value={lfoMin}>
-    </p>
+  
+      Y:
+      <select id="ydropdown" bind:value={dropdownYindex} on:change={dropdownYindexChange} on:click={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}>
+        {#each dropdownOptions as option, i}
+          <option value={i} disabled={option.isSelectedX || option.isSelectedLFO}>
+            {option.name}
+          </option>
+        {/each}
+      </select>
+    </div>
+  
+    <XYPad
+            {height}
+            {width}
+            {color} 
+            {background}
+            bind:paramX
+            bind:paramY
+  />
+  <p>X: {paramX.toFixed(2)}, Y: {paramY.toFixed(2)}</p>
   </div>
 </div>
 
