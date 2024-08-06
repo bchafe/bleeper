@@ -264,25 +264,6 @@
       dropdownOptions[dropdownYindex].value = paramY * dropdownOptions[dropdownYindex].max;
   }
 
-
-  
-  function oscdebug(){
-    var cache = [];
-    let out = JSON.stringify(osc, (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        // Duplicate reference found, discard key
-        if (cache.includes(value)) return;
-
-        // Store value in our collection
-        cache.push(value);
-      }
-      return value;
-    });
-    cache = null; // Enable garbage collection
-    console.log(out);
-
-  }
-
 </script>
 
  
@@ -299,11 +280,23 @@ on:contextmenu={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
   <div class="param" id="osc-controls">
     <h3>FM Oscillator</h3>
     <p>Carrier Wave:
-      <MultiState --width="250px" key={["sine", "triangle", "sawtooth", "square"]} value={["sine", "triangle", "sawtooth", "square"]} bind:currentValue={carrierWave} defaultIndex={3}></MultiState>
+      <select id="carrier-wave" bind:value={carrierWave} on:click={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}>
+        {#each ["sine", "triangle", "sawtooth", "square"] as option}
+          <option value={option}>
+            {option}
+          </option>
+        {/each}
+      </select>
     </p>
 
     <p>Modulator Wave:
-      <MultiState --width="250px" key={["sine", "triangle", "sawtooth", "square"]} value={["sine", "triangle", "sawtooth", "square"]} bind:currentValue={modWave} defaultIndex={1}></MultiState>
+      <select id="mod-wave" bind:value={modWave} on:click={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}>
+        {#each ["sine", "triangle", "sawtooth", "square"] as option}
+          <option value={option}>
+            {option}
+          </option>
+        {/each}
+      </select>
     </p>
     
     <p><label for="freq">Frequency: {frequency.toString().padStart(4, "0")}</label>
@@ -326,7 +319,13 @@ on:contextmenu={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}
 
     <p>
       Oversampling: 
-      <MultiState --width="250px" key={["none", "2x", "4x"]} value={["none", "2x", "4x"]} bind:currentValue={chebyOversample}></MultiState>
+      <select id="mod-wave" bind:value={chebyOversample} on:click={() => onKeyUp(new KeyboardEvent('keyup', {'key': ' '}))}>
+        {#each ["none", "2x", "4x"] as option}
+          <option value={option}>
+            {option}
+          </option>
+        {/each}
+      </select>
     </p>
 
     <p><label for="wet">Dry/wet: {chebyWet.toFixed(2)}</label>
